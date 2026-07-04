@@ -57,20 +57,22 @@ The HTTP service handles account lookup requests. Readiness depends on both Post
 
 The local path proves the workload shape without cloud spend. The AWS path shows the production architecture I would use, but is intentionally not applied.
 
-## Reviewer navigation
+## Main deliverables navigation
 
-| Reader goal | Start here |
-|---|---|
-| Understand the design trade-offs | [Decisions and trade-offs](submission/DECISIONS.md) |
-| Understand zero-downtime rollout | [Zero-downtime rollout](docs/zero-downtime-rollout.md) |
-| Understand how to run or validate locally | [How to run locally](docs/how-to-run.md) |
-| Review Kubernetes workload | [Helm chart](k8s/helm/bank-account-service/) |
-| Review container build | [Dockerfile](app/Dockerfile) |
-| Review database access model | [Database access](docs/database-access.md) and [runtime role SQL](local/postgres/002_runtime_role.sql) |
-| Review messaging semantics | [Messaging semantics](docs/messaging-semantics.md) |
-| Review CI/CD and rollback | [GitHub Actions workflows](.github/workflows/) and [rollback path](docs/rollback.md) |
-| Review Terraform AWS mapping | [Terraform AWS mapping](infra/terraform/) |
-| Review observability | [Observability docs](observability/), [Prometheus config](local/prometheus/), and [Grafana dashboards](local/grafana/) |
+These are the main assessment deliverables. The middle column points to the document or upload artifact where one exists; the right column points to the source evidence in the repo.
+
+| Main deliverable | Document / upload artifact | Source evidence |
+|---|---|---|
+| Container | [Dockerfile](app/Dockerfile) | [Dockerfile](app/Dockerfile), [Helm runtime security context](k8s/helm/bank-account-service/templates/deployment.yaml) |
+| Kubernetes workload and zero-downtime rollout | [08 Kubernetes Helm controls](submission/08_kubernetes_helm_controls.docx) | [Helm chart](k8s/helm/bank-account-service/), [rollout notes](docs/zero-downtime-rollout.md) |
+| Postgres provisioning and least-privilege role | [01 Postgres provisioning and least privilege](submission/01_postgres_provisioning_least_privilege.docx) | [RDS Terraform module](infra/terraform/modules/rds/), [local Postgres SQL](local/postgres/), [runtime grants](local/postgres/002_runtime_role.sql) |
+| Credential handling | [02 Credential handling](submission/02_credential_handling_no_plaintext.docx) | [ExternalSecret template](k8s/helm/bank-account-service/templates/externalsecret.yaml), [local Secret template](k8s/helm/bank-account-service/templates/secret.yaml), [Secrets Terraform module](infra/terraform/modules/secrets/), [IRSA module](infra/terraform/modules/irsa/), [database access notes](docs/database-access.md) |
+| Idempotent consumer, poison messages and DLQ | [03 Idempotent consumer and DLQ](submission/03_idempotent_consumer_dlq.docx) | [consumer.py](app/src/bank_account_service/consumer.py), [idempotency.py](app/src/bank_account_service/idempotency.py), [consumer tests](app/tests/test_consumer_idempotency.py), [messaging semantics](docs/messaging-semantics.md), [SQS Terraform module](infra/terraform/modules/sqs/) |
+| CI/CD and rollback | [04 GitHub Actions CI/CD](submission/04_github_actions_cicd.docx) | [Docker workflow](.github/workflows/docker.yml), [Kubernetes workflow](.github/workflows/kubernetes.yml), [Terraform plan workflow](.github/workflows/terraform-plan.yml), [Terraform apply workflow](.github/workflows/terraform-apply.yml), [rollback notes](docs/rollback.md) |
+| Terraform and sanitized plan | [05 Terraform cloud resources and plan](submission/05_terraform_cloud_resources_plan.docx) | [Terraform root](infra/terraform/), [sanitized plan](infra/terraform/plans/sanitized-plan.txt) |
+| Observability and PII scrubbing | [06 Observability and business o11y](submission/06_observability_business_o11y.docx) | [observability overview](observability/README.md), [alert rule](observability/alerts/bank-account-service-alerts.yaml), [dashboard](observability/dashboards/bank-account-service-dashboard.json), [trace path](observability/traces/trace-path.md), [data scrubbing](observability/data-scrubbing.md), [local Prometheus](local/prometheus/), [local Grafana](local/grafana/) |
+| README, run guide and local-to-AWS mapping | [07 README platform mapping](submission/07_readme_platform_mapping.docx) | [README](README.md), [how to run locally](docs/how-to-run.md), [production mapping](docs/production-mapping.md) |
+| Decisions and trade-offs | [Decisions document](submission/DECISIONS.md) | [database access notes](docs/database-access.md), [messaging semantics](docs/messaging-semantics.md), [backup and restore](docs/backup-restore.md), [threat model](docs/threat-model-lite.md) |
 
 ## Deliverables map
 
@@ -91,7 +93,7 @@ The local path proves the workload shape without cloud spend. The AWS path shows
 | Rollback path | `docs/rollback.md` | Docker image rollback by previous SHA; Kubernetes rollback by Helm revision; Terraform rollback by revert/plan/apply and PITR for stateful data. |
 | Terraform | `infra/terraform/`, `infra/terraform/plans/sanitized-plan.txt` | Modular AWS mapping. Authored and validated, not applied. |
 | Observability | `observability/README.md`, `observability/alerts/bank-account-service-alerts.yaml`, `observability/dashboards/bank-account-service-dashboard.json`, `observability/data-scrubbing.md`, `observability/traces/trace-path.md`, `local/prometheus/`, `local/grafana/` | RED metrics, trace path, dashboard/panel, alert rule and data scrubbing notes. |
-| Decisions document | `submission/DECISIONS.md` | Covers biggest decisions, SLO/alerting, least privilege/blast radius, recovery and what was cut. TODO: restore root `DECISIONS.md` if the submission must expose it at the repository root. |
+| Decisions document | `submission/DECISIONS.md` | Covers biggest decisions, SLO/alerting, least privilege/blast radius, recovery and what was cut. |
 
 ## Part 1: Build
 
