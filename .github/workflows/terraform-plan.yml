@@ -1,0 +1,51 @@
+name: Terraform Plan
+
+on:
+  pull_request:
+    paths:
+      - infra/terraform/**
+      - .github/workflows/terraform-plan.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: infra/terraform
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
+
+      - name: Terraform init without backend
+        run: terraform init -backend=false
+
+      - name: Terraform fmt check
+        run: terraform fmt -check -recursive
+
+      - name: Terraform validate
+        run: terraform validate
+
+      - name: Configure AWS credentials with OIDC for optional plan
+        if: vars.AWS_ROLE_TO_ASSUME != ''
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
+          aws-region: eu-west-2
+
+      - name: Terraform plan
+        if: vars.AWS_ROLE_TO_ASSUME != ''
+        run: terraform plan -input=false -no-color -var-file=envs/prod.tfvars.example -out=tfplan
+
+      - name: Upload plan artifact
+        if: vars.AWS_ROLE_TO_ASSUME != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: terraform-plan
+          path: infra/terraform/tfplan

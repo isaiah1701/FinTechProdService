@@ -1,0 +1,70 @@
+{
+  "editable": true,
+  "panels": [
+    {
+      "id": 1,
+      "description": "Business context: demand for account reads; useful during onboarding growth, releases, and incidents.",
+      "title": "Request Rate",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "sum(rate(mal_account_service_http_requests_total[5m]))",
+          "legendFormat": "requests"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": 2,
+      "description": "Business context: customer-impacting failures on account reads should trigger investigation before trust is affected.",
+      "title": "Error Rate",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "sum(rate(mal_account_service_http_request_errors_total[5m])) / clamp_min(sum(rate(mal_account_service_http_requests_total[5m])), 1)",
+          "legendFormat": "5xx ratio"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 0
+      }
+    },
+    {
+      "id": 3,
+      "description": "Business context: p95 catches slow account reads that averages can hide in banking workflows.",
+      "title": "P95 Latency",
+      "type": "timeseries",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(mal_account_service_http_request_duration_seconds_bucket[5m])) by (le))",
+          "legendFormat": "p95"
+        }
+      ],
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 0
+      }
+    }
+  ],
+  "schemaVersion": 40,
+  "tags": [
+    "mal",
+    "account-service"
+  ],
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "title": "Mal Account Service",
+  "uid": "mal-account-service"
+}

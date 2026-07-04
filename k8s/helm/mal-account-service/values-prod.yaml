@@ -1,0 +1,28 @@
+replicaCount: 3
+
+image:
+  repository: <account-id>.dkr.ecr.eu-west-2.amazonaws.com/mal-account-service
+  tag: <git-sha>
+  pullPolicy: IfNotPresent
+
+localSecret:
+  enabled: false
+
+aws:
+  enabled: true
+  region: eu-west-2
+  secretsManagerSecretName: mal/prod/account-service/database
+  irsaRoleArn: arn:aws:iam::<account-id>:role/mal-account-service
+
+externalSecrets:
+  enabled: true
+  secretStoreName: aws-secrets-manager
+
+serviceMonitor:
+  enabled: true
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70

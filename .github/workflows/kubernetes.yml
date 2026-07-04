@@ -1,0 +1,71 @@
+name: Kubernetes
+
+on:
+  pull_request:
+    paths:
+      - k8s/**
+      - .github/workflows/kubernetes.yml
+  push:
+    branches: [main]
+    paths:
+      - k8s/**
+      - .github/workflows/kubernetes.yml
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: "Set true to deploy with Helm after validation."
+        required: false
+        default: "false"
+      image_tag:
+        description: "Immutable image tag, usually a Git SHA."
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  helm-validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4
+
+      - name: Helm lint
+        run: helm lint k8s/helm/mal-account-service
+
+      - name: Helm template local values
+        run: helm template mal-account-service k8s/helm/mal-account-service
+
+      - name: Helm template production values
+        run: helm template mal-account-service k8s/helm/mal-account-service -f k8s/helm/mal-account-service/values-prod.yaml
+
+  helm-deploy:
+    needs: helm-validate
+    if: github.event_name == 'workflow_dispatch' && inputs.deploy == 'true'
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4
+
+      - name: Configure AWS credentials with OIDC
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
+          aws-region: eu-west-2
+
+      - name: Update kubeconfig
+        run: aws eks update-kubeconfig --name mal-platform --region eu-west-2
+
+      - name: Deploy with Helm
+        run: |
+          test -n "${{ inputs.image_tag }}"
+          helm upgrade --install mal-account-service k8s/helm/mal-account-service \
+            -f k8s/helm/mal-account-service/values-prod.yaml \
+            --set image.tag="${{ inputs.image_tag }}"

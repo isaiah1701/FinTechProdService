@@ -1,0 +1,27 @@
+Sanitized representative plan summary.
+
+Terraform is authored to express the AWS production mapping and is not applied for this assessment.
+
+Expected production-shaped resources:
+
+  + aws_ecr_repository.mal-account-service
+  + aws_ecr_lifecycle_policy.mal-account-service
+  + aws_eks_cluster.mal-platform
+  + aws_eks_node_group.mal-platform-default
+  + aws_db_subnet_group.mal-account-service
+  + aws_security_group.mal-account-service-postgres
+  + aws_db_instance.mal-account-service
+  + aws_secretsmanager_secret.mal/prod/account-service/database
+  + aws_sqs_queue.mal-account-service-events
+  + aws_sqs_queue.mal-account-service-events-dlq
+  + aws_iam_role.mal-account-service
+  + aws_iam_policy.mal-account-service
+  + aws_cloudwatch_log_group./aws/eks/mal-account-service
+
+Important security intent:
+
+  ~ RDS storage encrypted and deletion protection enabled
+  ~ RDS IAM database authentication enabled
+  ~ Workload IAM policy scoped to the database secret, queue, and mal_account_app rds-db:connect permission
+
+No real account IDs, ARNs, generated passwords, or secret values are included.

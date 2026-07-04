@@ -1,0 +1,17 @@
+__pycache__/
+.pytest_cache/
+.venv/
+.env
+*.pyc
+.DS_Store
+
+# Terraform local state and plugins.
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json

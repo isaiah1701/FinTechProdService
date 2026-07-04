@@ -1,0 +1,53 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: mal-account-service-alerts
+  labels:
+    app.kubernetes.io/name: mal-account-service
+spec:
+  groups:
+    - name: mal-account-service.slo
+      rules:
+        # Business context:
+        # Account lookup is a customer-facing banking path. Elevated 5xx or slow
+        # responses mean customers and internal operations cannot reliably see
+        # account state, which can create support load and loss of trust.
+        - alert: MalAccountLookupSLOBurn
+          expr: |
+            (
+              (
+                sum(rate(mal_account_service_http_request_errors_total{path="/api/accounts/{account_id}"}[5m]))
+                +
+                (
+                  sum(rate(mal_account_service_http_request_duration_seconds_count{path="/api/accounts/{account_id}"}[5m]))
+                  -
+                  sum(rate(mal_account_service_http_request_duration_seconds_bucket{path="/api/accounts/{account_id}",le="0.3"}[5m]))
+                )
+              )
+              /
+              clamp_min(sum(rate(mal_account_service_http_requests_total{path="/api/accounts/{account_id}"}[5m])), 1)
+            ) > 0.0144
+            and
+            (
+              (
+                sum(rate(mal_account_service_http_request_errors_total{path="/api/accounts/{account_id}"}[1h]))
+                +
+                (
+                  sum(rate(mal_account_service_http_request_duration_seconds_count{path="/api/accounts/{account_id}"}[1h]))
+                  -
+                  sum(rate(mal_account_service_http_request_duration_seconds_bucket{path="/api/accounts/{account_id}",le="0.3"}[1h]))
+                )
+              )
+              /
+              clamp_min(sum(rate(mal_account_service_http_requests_total{path="/api/accounts/{account_id}"}[1h])), 1)
+            ) > 0.006
+            and
+            sum(rate(mal_account_service_http_requests_total{path="/api/accounts/{account_id}"}[5m])) > 0.1
+          for: 2m
+          labels:
+            severity: page
+          annotations:
+            summary: "Mal account lookup SLO burn is too high"
+            description: "Account lookups are returning 5xx or exceeding 300ms across both fast and sustained windows while traffic is non-trivial."
+            business_impact: "Customers or internal banking workflows may be unable to retrieve account state quickly enough to complete their journey."
+            runbook: "docs/zero-downtime-rollout.md and docs/database-access.md"

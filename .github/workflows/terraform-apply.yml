@@ -1,0 +1,43 @@
+name: Terraform Apply
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_apply:
+        description: "Type apply to run Terraform apply."
+        required: true
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    environment: production
+    defaults:
+      run:
+        working-directory: infra/terraform
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
+
+      - name: Confirm manual apply
+        run: test "${{ inputs.confirm_apply }}" = "apply"
+
+      - name: Configure AWS credentials with OIDC
+        uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
+          aws-region: eu-west-2
+
+      - name: Terraform init
+        run: terraform init
+
+      - name: Terraform plan
+        run: terraform plan -input=false -no-color -var-file=envs/prod.tfvars.example -out=tfplan
+
+      - name: Terraform apply
+        run: terraform apply -input=false tfplan

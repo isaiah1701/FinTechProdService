@@ -1,0 +1,14 @@
+.git
+.github
+.venv
+.pytest_cache
+__pycache__
+*.pyc
+.terraform
+*.tfstate
+*.tfstate.*
+local
+observability
+docs
+infra
+k8s

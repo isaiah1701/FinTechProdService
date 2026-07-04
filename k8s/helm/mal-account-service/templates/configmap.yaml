@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-config
+  labels:
+    app.kubernetes.io/name: mal-account-service
+    app.kubernetes.io/instance: {{ .Release.Name }}
+data:
+  SERVICE_NAME: {{ .Values.config.serviceName | quote }}
+  LOG_LEVEL: {{ .Values.config.logLevel | quote }}
+  AWS_REGION: {{ .Values.aws.region | quote }}

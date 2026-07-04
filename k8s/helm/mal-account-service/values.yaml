@@ -1,0 +1,79 @@
+replicaCount: 2
+
+image:
+  repository: mal-account-service
+  tag: local
+  pullPolicy: Never
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  name: ""
+
+service:
+  type: ClusterIP
+  port: 8080
+
+containerPort: 8080
+
+config:
+  logLevel: INFO
+  serviceName: mal-account-service
+
+database:
+  secretName: mal-account-service-db
+
+localSecret:
+  enabled: false
+  databaseUrl: ""
+
+aws:
+  enabled: false
+  region: eu-west-2
+  secretsManagerSecretName: mal/prod/account-service/database
+  irsaRoleArn: arn:aws:iam::<account-id>:role/mal-account-service
+
+externalSecrets:
+  enabled: false
+  secretStoreName: aws-secrets-manager
+
+serviceMonitor:
+  enabled: false
+  interval: 15s
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 70
+
+pdb:
+  enabled: true
+  minAvailable: 1
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  fsGroup: 10001
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+
+networkPolicy:
+  enabled: true
+  postgresPort: 5432
