@@ -61,16 +61,16 @@ The local path proves the workload shape without cloud spend. The AWS path shows
 
 | Reader goal | Start here |
 |---|---|
-| Understand the design trade-offs | `submission/DECISIONS.md` |
-| Understand zero-downtime rollout | `docs/zero-downtime-rollout.md` |
-| Understand how to run or validate locally | `docs/how-to-run.md` |
-| Review Kubernetes workload | `k8s/helm/bank-account-service/` |
-| Review container build | `app/Dockerfile` |
-| Review database access model | `docs/database-access.md` and `local/postgres/002_runtime_role.sql` |
-| Review messaging semantics | `docs/messaging-semantics.md` |
-| Review CI/CD and rollback | `.github/workflows/` and `docs/rollback.md` |
-| Review Terraform AWS mapping | `infra/terraform/` |
-| Review observability | `observability/`, `local/prometheus/`, and `local/grafana/` |
+| Understand the design trade-offs | [Decisions and trade-offs](submission/DECISIONS.md) |
+| Understand zero-downtime rollout | [Zero-downtime rollout](docs/zero-downtime-rollout.md) |
+| Understand how to run or validate locally | [How to run locally](docs/how-to-run.md) |
+| Review Kubernetes workload | [Helm chart](k8s/helm/bank-account-service/) |
+| Review container build | [Dockerfile](app/Dockerfile) |
+| Review database access model | [Database access](docs/database-access.md) and [runtime role SQL](local/postgres/002_runtime_role.sql) |
+| Review messaging semantics | [Messaging semantics](docs/messaging-semantics.md) |
+| Review CI/CD and rollback | [GitHub Actions workflows](.github/workflows/) and [rollback path](docs/rollback.md) |
+| Review Terraform AWS mapping | [Terraform AWS mapping](infra/terraform/) |
+| Review observability | [Observability docs](observability/), [Prometheus config](local/prometheus/), and [Grafana dashboards](local/grafana/) |
 
 ## Deliverables map
 
@@ -112,7 +112,7 @@ The most important implementation paths are:
 
 The decisions document is:
 
-- `submission/DECISIONS.md`
+- [submission/DECISIONS.md](submission/DECISIONS.md)
 
 It covers:
 
@@ -126,7 +126,7 @@ It covers:
 
 The detailed local run and validation steps are documented in:
 
-- `docs/how-to-run.md`
+- [docs/how-to-run.md](docs/how-to-run.md)
 
 That guide covers the kind/Docker Compose path, Helm rendering, test commands and Terraform validation.
 
