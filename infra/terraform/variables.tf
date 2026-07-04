@@ -18,8 +18,8 @@ variable "environment" {
 
 variable "name_prefix" {
   type        = string
-  description = "Shared name prefix for Mal account service resources."
-  default     = "mal-account-service"
+  description = "Shared name prefix for bank account service resources."
+  default     = "bank-account-service"
 }
 
 variable "vpc_id" {

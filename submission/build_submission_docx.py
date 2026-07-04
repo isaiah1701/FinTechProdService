@@ -10,7 +10,7 @@ OUT = ROOT / "submission"
 
 
 BANK_CONTEXT = (
-    "Context: Mal is treated as an early-stage bank. The design favours fast, "
+    "Context: an anonymized bank is treated as an early-stage bank. The design favours fast, "
     "boring delivery paths with reliability controls that protect customer trust, "
     "account-read availability, and operational speed."
 )
@@ -43,7 +43,7 @@ def setup_styles(doc: Document) -> None:
 
 def add_cover(doc: Document, title: str, subtitle: str) -> None:
     p = doc.add_paragraph()
-    run = p.add_run("Mal Account Service Platform")
+    run = p.add_run("Bank Account Service Platform")
     run.bold = True
     run.font.size = Pt(18)
     run.font.color.rgb = RGBColor(18, 47, 87)
@@ -163,8 +163,8 @@ def credentials_doc() -> None:
             doc,
             [
                 (".env.example", "Variable names only, no values."),
-                ("k8s/helm/mal-account-service/templates/externalsecret.yaml", "Secrets Manager to Kubernetes Secret path."),
-                ("k8s/helm/mal-account-service/templates/serviceaccount.yaml", "IRSA annotation for production service account."),
+                ("k8s/helm/bank-account-service/templates/externalsecret.yaml", "Secrets Manager to Kubernetes Secret path."),
+                ("k8s/helm/bank-account-service/templates/serviceaccount.yaml", "IRSA annotation for production service account."),
                 ("infra/terraform/modules/irsa/main.tf", "Scoped IAM access to secret, queue, and rds-db:connect."),
                 ("infra/terraform/modules/rds/main.tf", "RDS IAM auth enabled."),
                 ("docs/database-access.md", "Credential handling narrative."),
@@ -188,8 +188,8 @@ def credentials_doc() -> None:
     def excerpts(doc: Document) -> None:
         add_code(doc, ".env.example")
         add_code(doc, "local/docker-compose.yml", 70)
-        add_code(doc, "k8s/helm/mal-account-service/templates/externalsecret.yaml")
-        add_code(doc, "k8s/helm/mal-account-service/templates/serviceaccount.yaml")
+        add_code(doc, "k8s/helm/bank-account-service/templates/externalsecret.yaml")
+        add_code(doc, "k8s/helm/bank-account-service/templates/serviceaccount.yaml")
         add_code(doc, "infra/terraform/modules/irsa/main.tf")
         add_code(doc, "docs/database-access.md")
 
@@ -215,8 +215,8 @@ def messaging_doc() -> None:
         add_evidence_table(
             doc,
             [
-                ("app/src/mal_account_service/consumer.py", "Transaction, validation, audit side effect."),
-                ("app/src/mal_account_service/idempotency.py", "ON CONFLICT DO NOTHING idempotency guard."),
+                ("app/src/bank_account_service/consumer.py", "Transaction, validation, audit side effect."),
+                ("app/src/bank_account_service/idempotency.py", "ON CONFLICT DO NOTHING idempotency guard."),
                 ("app/tests/test_consumer_idempotency.py", "Duplicate event creates one audit row."),
                 ("infra/terraform/modules/sqs/main.tf", "SQS main queue, DLQ, maxReceiveCount = 3."),
                 ("docs/messaging-semantics.md", "Poison message and retry semantics."),
@@ -235,8 +235,8 @@ def messaging_doc() -> None:
         )
 
     def excerpts(doc: Document) -> None:
-        add_code(doc, "app/src/mal_account_service/consumer.py")
-        add_code(doc, "app/src/mal_account_service/idempotency.py")
+        add_code(doc, "app/src/bank_account_service/consumer.py")
+        add_code(doc, "app/src/bank_account_service/idempotency.py")
         add_code(doc, "app/tests/test_consumer_idempotency.py")
         add_code(doc, "infra/terraform/modules/sqs/main.tf")
         add_code(doc, "docs/messaging-semantics.md")
@@ -379,10 +379,10 @@ def observability_doc() -> None:
         add_evidence_table(
             doc,
             [
-                ("app/src/mal_account_service/metrics.py", "Request count, errors, and duration metrics."),
+                ("app/src/bank_account_service/metrics.py", "Request count, errors, and duration metrics."),
                 ("observability/traces/trace-path.md", "Account lookup trace path without raw account ID telemetry."),
-                ("observability/dashboards/mal-account-service-dashboard.json", "Request rate, error rate, p95 latency panels."),
-                ("observability/alerts/mal-account-service-alerts.yaml", "SLO burn alert with business impact annotation."),
+                ("observability/dashboards/bank-account-service-dashboard.json", "Request rate, error rate, p95 latency panels."),
+                ("observability/alerts/bank-account-service-alerts.yaml", "SLO burn alert with business impact annotation."),
                 ("observability/data-scrubbing.md", "PII and high-cardinality telemetry controls."),
             ],
         )
@@ -400,10 +400,10 @@ def observability_doc() -> None:
         )
 
     def excerpts(doc: Document) -> None:
-        add_code(doc, "app/src/mal_account_service/metrics.py", 120)
-        add_code(doc, "observability/alerts/mal-account-service-alerts.yaml")
+        add_code(doc, "app/src/bank_account_service/metrics.py", 120)
+        add_code(doc, "observability/alerts/bank-account-service-alerts.yaml")
         add_code(doc, "observability/traces/trace-path.md")
-        add_code(doc, "observability/dashboards/mal-account-service-dashboard.json", 120)
+        add_code(doc, "observability/dashboards/bank-account-service-dashboard.json", 120)
         add_code(doc, "observability/data-scrubbing.md")
 
     save_doc(
@@ -430,8 +430,8 @@ def readme_doc() -> None:
             [
                 ("README.md", "Run path, validation commands, requirement map, local-to-AWS mapping."),
                 ("Makefile", "Short commands matching README."),
-                ("k8s/helm/mal-account-service/values.yaml", "kind-friendly defaults without committed secrets."),
-                ("k8s/helm/mal-account-service/values-prod.yaml", "AWS production image/secret/controller mapping."),
+                ("k8s/helm/bank-account-service/values.yaml", "kind-friendly defaults without committed secrets."),
+                ("k8s/helm/bank-account-service/values-prod.yaml", "AWS production image/secret/controller mapping."),
             ],
         )
 
@@ -466,8 +466,8 @@ def readme_doc() -> None:
     def excerpts(doc: Document) -> None:
         add_code(doc, "README.md")
         add_code(doc, "Makefile")
-        add_code(doc, "k8s/helm/mal-account-service/values.yaml")
-        add_code(doc, "k8s/helm/mal-account-service/values-prod.yaml")
+        add_code(doc, "k8s/helm/bank-account-service/values.yaml")
+        add_code(doc, "k8s/helm/bank-account-service/values-prod.yaml")
 
     save_doc(
         "07_readme_platform_mapping.docx",
@@ -482,6 +482,67 @@ def readme_doc() -> None:
     )
 
 
+def kubernetes_doc() -> None:
+    def summary(doc: Document) -> None:
+        doc.add_paragraph(
+            "The Helm chart provides the Kubernetes workload controls requested for "
+            "the assessment: Deployment, Service, probes, rolling-update strategy, "
+            "PodDisruptionBudget, security contexts, NetworkPolicy, ServiceAccount, "
+            "and HPA. The defaults run on kind without AWS controllers; production "
+            "values turn on AWS-style identity and external secrets."
+        )
+        add_evidence_table(
+            doc,
+            [
+                ("k8s/helm/bank-account-service/templates/deployment.yaml", "Deployment, probes, zero-downtime rollout, graceful drain, resources, security context."),
+                ("k8s/helm/bank-account-service/templates/service.yaml", "Stable in-cluster address that routes only to ready pods."),
+                ("k8s/helm/bank-account-service/templates/pdb.yaml", "Keeps at least one pod available during voluntary disruption."),
+                ("k8s/helm/bank-account-service/templates/hpa.yaml", "Simple CPU autoscaling for the HTTP service."),
+                ("k8s/helm/bank-account-service/templates/networkpolicy.yaml", "Ingress/egress intent and blast-radius reduction."),
+                ("k8s/helm/bank-account-service/templates/serviceaccount.yaml", "Workload identity hook for production."),
+                ("k8s/helm/bank-account-service/values.yaml", "kind-friendly local defaults."),
+                ("k8s/helm/bank-account-service/values-prod.yaml", "AWS production-style overrides."),
+            ],
+        )
+
+    def bank_rationale(doc: Document) -> None:
+        add_evidence_table(
+            doc,
+            [
+                ("Deployment rolling update", "For a young bank, ordinary releases should not interrupt account reads. maxUnavailable=0 keeps old pods serving while a new pod becomes ready."),
+                ("Readiness probe", "Protects customers by removing pods that are draining or cannot reach Postgres from the Service endpoints."),
+                ("Liveness probe", "Keeps dead processes from lingering, but does not depend on Postgres, avoiding restart storms during database incidents."),
+                ("preStop + termination grace", "Gives load-balancer and endpoint propagation time so in-flight requests can complete."),
+                ("Service", "Provides a stable name for callers and only routes to ready pods."),
+                ("PodDisruptionBudget", "Prevents voluntary maintenance from taking every replica down at once."),
+                ("Security context", "Cheap, high-value hardening: non-root user, no privilege escalation, read-only root filesystem, and dropped Linux capabilities."),
+                ("HPA", "A simple first autoscaler for the HTTP workload. KEDA would be the next step for queue-depth scaling if the consumer became a separate deployment."),
+                ("NetworkPolicy", "Documents network intent early and starts shrinking blast radius before the platform grows complex."),
+            ],
+        )
+
+    def excerpts(doc: Document) -> None:
+        add_code(doc, "k8s/helm/bank-account-service/templates/deployment.yaml")
+        add_code(doc, "k8s/helm/bank-account-service/templates/service.yaml")
+        add_code(doc, "k8s/helm/bank-account-service/templates/pdb.yaml")
+        add_code(doc, "k8s/helm/bank-account-service/templates/hpa.yaml")
+        add_code(doc, "k8s/helm/bank-account-service/templates/networkpolicy.yaml")
+        add_code(doc, "k8s/helm/bank-account-service/templates/serviceaccount.yaml")
+        add_code(doc, "k8s/helm/bank-account-service/values.yaml")
+        add_code(doc, "k8s/helm/bank-account-service/values-prod.yaml")
+
+    save_doc(
+        "08_kubernetes_helm_controls.docx",
+        "Kubernetes Manifests and Helm Chart",
+        "Deployment, Service, probes, zero-downtime rollout, PDB, securityContext, NetworkPolicy, and HPA.",
+        [
+            ("Summary", summary),
+            ("Why These Components Help An Early-Stage Bank", bank_rationale),
+            ("YAML Evidence", excerpts),
+        ],
+    )
+
+
 def main() -> None:
     OUT.mkdir(exist_ok=True)
     postgres_doc()
@@ -491,6 +552,7 @@ def main() -> None:
     terraform_doc()
     observability_doc()
     readme_doc()
+    kubernetes_doc()
 
 
 if __name__ == "__main__":

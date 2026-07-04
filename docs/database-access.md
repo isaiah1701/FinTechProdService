@@ -10,11 +10,11 @@ The local schema has three tables:
 
 ## Runtime Role
 
-The application connects as `mal_account_app`, not as the database owner.
+The application connects as `bank_account_app`, not as the database owner.
 
 It can:
 
-- connect to `mal_accounts`
+- connect to `bank_accounts`
 - use the application schema
 - `SELECT`, `INSERT`, and `UPDATE` rows in `accounts`
 - `SELECT` and `INSERT` audit events
@@ -38,7 +38,7 @@ Local development uses environment variables and a Kubernetes Secret created at 
 
 Local bootstrap:
 
-1. Set `MAL_POSTGRES_OWNER_PASSWORD`, `MAL_ACCOUNT_APP_PASSWORD`, and `MAL_GRAFANA_ADMIN_PASSWORD` in the shell or local `.env`.
+1. Set `BANK_POSTGRES_OWNER_PASSWORD`, `BANK_ACCOUNT_APP_PASSWORD`, `BANK_GRAFANA_ADMIN_PASSWORD`, and optionally `BANK_POSTGRES_PORT` in the shell or local `.env`.
 2. Start dependencies with `make local-up`.
 3. Build `DATABASE_URL` in the shell.
 4. Create the Kubernetes Secret with `make kind-secret`.
@@ -51,7 +51,7 @@ Production mapping:
 4. External Secrets creates a Kubernetes Secret.
 5. The pod receives `DATABASE_URL` from the Kubernetes Secret.
 
-Terraform also enables RDS IAM database authentication and scopes `rds-db:connect` to the `mal_account_app` database user. In a production rollout I would choose one operational path per workload: either Secrets Manager-managed credentials, or IAM database authentication with short-lived tokens and client support in the application.
+Terraform also enables RDS IAM database authentication and scopes `rds-db:connect` to the `bank_account_app` database user. In a production rollout I would choose one operational path per workload: either Secrets Manager-managed credentials, or IAM database authentication with short-lived tokens and client support in the application.
 
 No plaintext database credential is committed.
 

@@ -4,8 +4,8 @@ global:
 scrape_configs:
   # Business context: this scrape feeds RED metrics for account lookup availability
   # and latency, which are customer trust signals for an early-stage bank.
-  - job_name: mal-account-service
+  - job_name: bank-account-service
     metrics_path: /metrics
     static_configs:
       - targets:
-          - host.docker.internal:8080
+          - host.docker.internal:18080

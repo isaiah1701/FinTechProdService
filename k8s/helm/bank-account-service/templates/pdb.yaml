@@ -4,12 +4,14 @@ kind: PodDisruptionBudget
 metadata:
   name: {{ .Release.Name }}
   labels:
-    app.kubernetes.io/name: mal-account-service
+    app.kubernetes.io/name: bank-account-service
     app.kubernetes.io/instance: {{ .Release.Name }}
 spec:
+  # Keeps at least one replica available during voluntary disruptions, which is
+  # a simple availability guard while the bank is still scaling the platform.
   minAvailable: {{ .Values.pdb.minAvailable }}
   selector:
     matchLabels:
-      app.kubernetes.io/name: mal-account-service
+      app.kubernetes.io/name: bank-account-service
       app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}

@@ -1,7 +1,7 @@
 aws_region     = "eu-west-2"
 aws_account_id = "000000000000"
 environment    = "prod"
-name_prefix    = "mal-account-service"
+name_prefix    = "bank-account-service"
 
 vpc_id             = "vpc-00000000000000000"
 private_subnet_ids = ["subnet-00000000000000001", "subnet-00000000000000002"]
@@ -9,7 +9,7 @@ private_subnet_ids = ["subnet-00000000000000001", "subnet-00000000000000002"]
 db_allowed_cidr_blocks = ["10.0.0.0/16"]
 
 eks_cluster_version   = "1.31"
-eks_cluster_role_arn  = "arn:aws:iam::000000000000:role/mal-platform-eks-cluster"
-eks_node_role_arn     = "arn:aws:iam::000000000000:role/mal-platform-eks-node"
+eks_cluster_role_arn  = "arn:aws:iam::000000000000:role/bank-platform-eks-cluster"
+eks_node_role_arn     = "arn:aws:iam::000000000000:role/bank-platform-eks-node"
 eks_oidc_provider_arn = "arn:aws:iam::000000000000:oidc-provider/oidc.eks.eu-west-2.amazonaws.com/id/EXAMPLE"
 eks_oidc_provider_url = "https://oidc.eks.eu-west-2.amazonaws.com/id/EXAMPLE"

@@ -13,7 +13,7 @@ class Settings:
 @lru_cache
 def get_settings() -> Settings:
     return Settings(
-        service_name=os.getenv("SERVICE_NAME", "mal-account-service"),
+        service_name=os.getenv("SERVICE_NAME", "bank-account-service"),
         database_url=os.getenv("DATABASE_URL", ""),
         log_level=os.getenv("LOG_LEVEL", "INFO"),
     )

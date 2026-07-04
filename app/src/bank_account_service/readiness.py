@@ -1,6 +1,6 @@
 from threading import Lock
 
-from mal_account_service.db import ping_database
+from bank_account_service.db import ping_database
 
 _draining = False
 _lock = Lock()

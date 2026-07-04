@@ -1,8 +1,8 @@
 from collections.abc import Mapping
 from typing import Any
 
-from mal_account_service.db import get_connection
-from mal_account_service.idempotency import mark_event_processed
+from bank_account_service.db import get_connection
+from bank_account_service.idempotency import mark_event_processed
 
 
 class InvalidEventError(ValueError):

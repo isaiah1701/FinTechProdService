@@ -1,4 +1,4 @@
-from mal_account_service import consumer
+from bank_account_service import consumer
 
 
 class NoopContext:

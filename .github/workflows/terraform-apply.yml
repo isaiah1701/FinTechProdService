@@ -11,9 +11,13 @@ permissions:
   contents: read
   id-token: write
 
+env:
+  ENABLE_TERRAFORM_APPLY: ${{ vars.ENABLE_TERRAFORM_APPLY || 'false' }}
+
 jobs:
   apply:
     runs-on: ubuntu-latest
+    # GitHub Environments provide the manual approval gate before any production-equivalent apply.
     environment: production
     defaults:
       run:
@@ -24,20 +28,41 @@ jobs:
 
       - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
 
-      - name: Confirm manual apply
-        run: test "${{ inputs.confirm_apply }}" = "apply"
+      - name: Assessment safety guard
+        id: safety
+        run: |
+          if [ "${ENABLE_TERRAFORM_APPLY}" != "true" ]; then
+            echo "Terraform apply disabled for assessment safety."
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          test "${{ inputs.confirm_apply }}" = "apply"
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
 
       - name: Configure AWS credentials with OIDC
+        if: steps.safety.outputs.enabled == 'true'
         uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a
         with:
           role-to-assume: ${{ vars.AWS_ROLE_TO_ASSUME }}
           aws-region: eu-west-2
 
       - name: Terraform init
+        if: steps.safety.outputs.enabled == 'true'
         run: terraform init
 
+      - name: Terraform fmt check
+        if: steps.safety.outputs.enabled == 'true'
+        run: terraform fmt -check -recursive
+
+      - name: Terraform validate
+        if: steps.safety.outputs.enabled == 'true'
+        run: terraform validate
+
       - name: Terraform plan
+        if: steps.safety.outputs.enabled == 'true'
         run: terraform plan -input=false -no-color -var-file=envs/prod.tfvars.example -out=tfplan
 
       - name: Terraform apply
+        if: steps.safety.outputs.enabled == 'true'
         run: terraform apply -input=false tfplan

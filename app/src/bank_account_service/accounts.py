@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 
-from mal_account_service import db
-from mal_account_service.tracing import get_tracer
+from bank_account_service import db
+from bank_account_service.tracing import get_tracer
 
 router = APIRouter()
 

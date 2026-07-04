@@ -4,11 +4,13 @@ kind: HorizontalPodAutoscaler
 metadata:
   name: {{ .Release.Name }}
   labels:
-    app.kubernetes.io/name: mal-account-service
+    app.kubernetes.io/name: bank-account-service
     app.kubernetes.io/instance: {{ .Release.Name }}
   annotations:
-    mal.io/scaling-note: "CPU is a practical default for this tiny assessment; production should prefer request rate, latency, queue depth, or RED metrics after observing traffic."
+    bank.example/scaling-note: "CPU is a practical default for this tiny assessment; production should prefer request rate, latency, queue depth, or RED metrics after observing traffic."
 spec:
+  # HPA is intentionally simple for this assessment. It gives a small team basic
+  # autoscaling without introducing KEDA until queue-depth scaling is needed.
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment

@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 
-from mal_account_service import db
-from mal_account_service.main import app
+from bank_account_service import db
+from bank_account_service.main import app
 
 
 def test_get_account_returns_account(monkeypatch):

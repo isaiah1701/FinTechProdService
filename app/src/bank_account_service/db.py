@@ -3,7 +3,7 @@ from typing import Any
 import psycopg
 from psycopg.rows import dict_row
 
-from mal_account_service.config import get_settings
+from bank_account_service.config import get_settings
 
 
 def get_connection(database_url: str | None = None) -> psycopg.Connection:

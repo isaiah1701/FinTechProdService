@@ -2,9 +2,9 @@
 
 The service exposes Prometheus metrics at `/metrics`:
 
-- `mal_account_service_http_requests_total`
-- `mal_account_service_http_request_errors_total`
-- `mal_account_service_http_request_duration_seconds`
+- `bank_account_service_http_requests_total`
+- `bank_account_service_http_request_errors_total`
+- `bank_account_service_http_request_duration_seconds`
 
 The SLO in `DECISIONS.md` focuses on successful account lookups: non-5xx and under 300ms.
 

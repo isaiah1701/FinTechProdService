@@ -1,7 +1,7 @@
 replicaCount: 2
 
 image:
-  repository: mal-account-service
+  repository: bank-account-service
   tag: local
   pullPolicy: Never
 
@@ -20,10 +20,10 @@ containerPort: 8080
 
 config:
   logLevel: INFO
-  serviceName: mal-account-service
+  serviceName: bank-account-service
 
 database:
-  secretName: mal-account-service-db
+  secretName: bank-account-service-db
 
 localSecret:
   enabled: false
@@ -32,8 +32,8 @@ localSecret:
 aws:
   enabled: false
   region: eu-west-2
-  secretsManagerSecretName: mal/prod/account-service/database
-  irsaRoleArn: arn:aws:iam::<account-id>:role/mal-account-service
+  secretsManagerSecretName: bank/prod/account-service/database
+  irsaRoleArn: arn:aws:iam::<account-id>:role/bank-account-service
 
 externalSecrets:
   enabled: false

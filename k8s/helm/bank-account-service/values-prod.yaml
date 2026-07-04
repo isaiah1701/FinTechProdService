@@ -1,7 +1,7 @@
 replicaCount: 3
 
 image:
-  repository: <account-id>.dkr.ecr.eu-west-2.amazonaws.com/mal-account-service
+  repository: <account-id>.dkr.ecr.eu-west-2.amazonaws.com/bank-account-service
   tag: <git-sha>
   pullPolicy: IfNotPresent
 
@@ -11,8 +11,8 @@ localSecret:
 aws:
   enabled: true
   region: eu-west-2
-  secretsManagerSecretName: mal/prod/account-service/database
-  irsaRoleArn: arn:aws:iam::<account-id>:role/mal-account-service
+  secretsManagerSecretName: bank/prod/account-service/database
+  irsaRoleArn: arn:aws:iam::<account-id>:role/bank-account-service
 
 externalSecrets:
   enabled: true

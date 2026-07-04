@@ -18,7 +18,7 @@ Credential mapping:
 
 - Secrets Manager stores the database secret metadata and, in a real pipeline, the secret value is inserted out-of-band.
 - IRSA grants the service account read access to only that secret.
-- RDS IAM authentication is enabled in the RDS module and the IRSA role includes a scoped `rds-db:connect` permission for `mal_account_app`.
+- RDS IAM authentication is enabled in the RDS module and the IRSA role includes a scoped `rds-db:connect` permission for `bank_account_app`.
 
 ## Resource Relationships For Non-Technical Reviewers
 

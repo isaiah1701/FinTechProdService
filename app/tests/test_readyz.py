@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 
-from mal_account_service import readiness
-from mal_account_service.main import app
+from bank_account_service import readiness
+from bank_account_service.main import app
 
 
 def test_readyz_returns_ok_when_database_is_reachable(monkeypatch):

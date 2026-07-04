@@ -5,11 +5,11 @@ from datetime import datetime, UTC
 
 from fastapi import FastAPI, HTTPException
 
-from mal_account_service.accounts import router as accounts_router
-from mal_account_service.config import get_settings
-from mal_account_service.metrics import metrics_response, record_http_metrics
-from mal_account_service.readiness import mark_draining, readiness_status
-from mal_account_service.tracing import configure_tracing
+from bank_account_service.accounts import router as accounts_router
+from bank_account_service.config import get_settings
+from bank_account_service.metrics import metrics_response, record_http_metrics
+from bank_account_service.readiness import mark_draining, readiness_status
+from bank_account_service.tracing import configure_tracing
 
 
 class JsonFormatter(logging.Formatter):
@@ -32,7 +32,7 @@ def configure_logging() -> None:
 
 def create_app() -> FastAPI:
     configure_logging()
-    app = FastAPI(title="Mal Account Service", version="0.1.0")
+    app = FastAPI(title="Bank Account Service", version="0.1.0")
     app.middleware("http")(record_http_metrics)
     app.include_router(accounts_router)
 

@@ -3,12 +3,14 @@ kind: Service
 metadata:
   name: {{ .Release.Name }}
   labels:
-    app.kubernetes.io/name: mal-account-service
+    app.kubernetes.io/name: bank-account-service
     app.kubernetes.io/instance: {{ .Release.Name }}
 spec:
+  # Stable in-cluster address for callers. The Service only sends traffic to
+  # pods that pass readiness, which protects customers during rollouts.
   type: {{ .Values.service.type }}
   selector:
-    app.kubernetes.io/name: mal-account-service
+    app.kubernetes.io/name: bank-account-service
     app.kubernetes.io/instance: {{ .Release.Name }}
   ports:
     - name: http

@@ -4,12 +4,15 @@ kind: NetworkPolicy
 metadata:
   name: {{ .Release.Name }}
   labels:
-    app.kubernetes.io/name: mal-account-service
+    app.kubernetes.io/name: bank-account-service
     app.kubernetes.io/instance: {{ .Release.Name }}
 spec:
+  # Demonstrates network intent: allow the app path in, and restrict egress to
+  # DNS, Postgres, and HTTPS for cloud APIs. A real bank rollout would tighten
+  # selectors once namespaces and controllers are fixed.
   podSelector:
     matchLabels:
-      app.kubernetes.io/name: mal-account-service
+      app.kubernetes.io/name: bank-account-service
       app.kubernetes.io/instance: {{ .Release.Name }}
   policyTypes:
     - Ingress

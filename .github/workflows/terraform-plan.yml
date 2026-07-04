@@ -23,15 +23,17 @@ jobs:
 
       - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd
 
-      - name: Terraform init without backend
-        run: terraform init -backend=false
-
       - name: Terraform fmt check
         run: terraform fmt -check -recursive
+
+      - name: Terraform init without backend
+        run: terraform init -backend=false
 
       - name: Terraform validate
         run: terraform validate
 
+      # fmt + validate always run. Live plan is optional so PR validation stays cost-free
+      # unless AWS OIDC and placeholder tfvars are intentionally configured.
       - name: Configure AWS credentials with OIDC for optional plan
         if: vars.AWS_ROLE_TO_ASSUME != ''
         uses: aws-actions/configure-aws-credentials@7474bc4690e29a8392af63c5b98e7449536d5c3a
@@ -43,9 +45,15 @@ jobs:
         if: vars.AWS_ROLE_TO_ASSUME != ''
         run: terraform plan -input=false -no-color -var-file=envs/prod.tfvars.example -out=tfplan
 
+      - name: Terraform plan summary
+        if: vars.AWS_ROLE_TO_ASSUME != ''
+        run: terraform show -no-color tfplan > tfplan.txt
+
       - name: Upload plan artifact
         if: vars.AWS_ROLE_TO_ASSUME != ''
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: terraform-plan
-          path: infra/terraform/tfplan
+          path: |
+            infra/terraform/tfplan
+            infra/terraform/tfplan.txt

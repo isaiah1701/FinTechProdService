@@ -1,147 +1,171 @@
-# mal-account-service-platform
+# Bank Account Service Platform
 
-Senior DevOps/SRE take-home repository for Mal, framed as an early-stage bank where speed matters but reliability is part of the product. The application is intentionally tiny; the assessment value is in the platform controls around it.
+## Objective
 
-The local path proves the workload behaviour on kind. The AWS path is expressed as Terraform and production Helm values, but is intentionally not applied for this assessment.
+This repository implements a deliberately simple account lookup service and the platform controls around it. The objective is to show how a small service would be packaged, deployed, secured, observed, and operated in a regulated-bank-style environment.
 
-## Runtime Targets
+The application is intentionally small:
 
-| Target | Purpose | Applied? |
+- `GET /healthz`
+- `GET /readyz`
+- `GET /metrics`
+- `GET /api/accounts/{id}`
+
+The focus is the platform around the service: container hardening, Kubernetes/Helm deployment, zero-downtime rollout behaviour, Postgres least-privilege access, idempotent messaging, CI/CD gates, Terraform AWS mapping, observability, and recovery thinking.
+
+The local path targets kind and Docker Compose. The production path is expressed through AWS-oriented Terraform and Helm values. Terraform is authored and validated but not applied for this assessment.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    Client["Client / API caller"] --> App["Bank Account Service"]
+
+    App --> Health["/healthz and /readyz"]
+    App --> Metrics["/metrics"]
+    App --> Trace["Trace path"]
+    App --> DB[(Postgres)]
+
+    Producer["Account event"] --> Queue["SQS-style queue"]
+    Queue --> Consumer["Idempotent consumer"]
+    Consumer --> Audit[(audit_events)]
+    Consumer --> Dedupe[(processed_events)]
+    Queue --> DLQ["Dead-letter queue"]
+
+    subgraph K8s["kind locally / EKS in AWS"]
+        App
+        Consumer
+    end
+
+    subgraph Data["Local Postgres / AWS RDS"]
+        DB
+        Audit
+        Dedupe
+    end
+```
+
+The HTTP service handles account lookup requests. Readiness depends on both Postgres reachability and the pod not being in draining mode. The consumer handles asynchronous audit-style events and uses `processed_events` as a dedupe table so redelivery does not repeat the side effect. Metrics, tracing, dashboards, and alerts are included as observability evidence.
+
+## Runtime model
+
+| Target | Purpose | Status |
 |---|---|---|
-| kind | Local validation of Kubernetes workload | Yes, optional |
-| Docker Compose | Local Postgres/SQS/observability dependencies | Yes |
-| AWS Terraform | Production-shaped infrastructure mapping | No |
-| GitHub Actions | CI/CD structure and controls | Authored only unless configured |
+| kind | Local Kubernetes validation of the Helm workload | Local/optional |
+| Docker Compose | Local dependencies such as Postgres and supporting services | Local/optional |
+| AWS Terraform | Production-shaped mapping for EKS, ECR, RDS, IAM, SQS and secrets | Authored and validated only |
+| GitHub Actions | CI/CD gates, deployment shape, rollback and Terraform controls | Authored |
 
-## Assessment Requirement Map
+The local path proves the workload shape without cloud spend. The AWS path shows the production architecture I would use, but is intentionally not applied.
 
-| Requirement | Location |
+## Reviewer navigation
+
+| Reader goal | Start here |
 |---|---|
-| Container | `app/Dockerfile` |
-| Kubernetes workload | `k8s/helm/mal-account-service/` |
-| Zero-downtime rollout | `docs/zero-downtime-rollout.md` |
-| Postgres and DB grants | `local/postgres/` and `docs/database-access.md` |
-| Credential handling | `k8s/helm/mal-account-service/templates/externalsecret.yaml` |
-| Messaging consumer | `app/src/mal_account_service/consumer.py` |
-| Idempotency | `app/src/mal_account_service/idempotency.py` |
-| CI/CD | `.github/workflows/` |
-| Terraform | `infra/terraform/` |
-| Observability | `observability/` and `local/prometheus/` |
+| Understand the design trade-offs | `submission/DECISIONS.md` |
+| Understand zero-downtime rollout | `docs/zero-downtime-rollout.md` |
+| Understand how to run or validate locally | `docs/how-to-run.md` |
+| Review Kubernetes workload | `k8s/helm/bank-account-service/` |
+| Review container build | `app/Dockerfile` |
+| Review database access model | `docs/database-access.md` and `local/postgres/002_runtime_role.sql` |
+| Review messaging semantics | `docs/messaging-semantics.md` |
+| Review CI/CD and rollback | `.github/workflows/` and `docs/rollback.md` |
+| Review Terraform AWS mapping | `infra/terraform/` |
+| Review observability | `observability/`, `local/prometheus/`, and `local/grafana/` |
 
-## Local Run Path
+## Deliverables map
 
-Start local dependencies:
-
-```bash
-export MAL_POSTGRES_OWNER_PASSWORD='<set-locally>'
-export MAL_ACCOUNT_APP_PASSWORD='<set-locally>'
-export MAL_GRAFANA_ADMIN_PASSWORD='<set-locally>'
-make local-up
-```
-
-Build and deploy to kind:
-
-```bash
-kind create cluster --name mal-platform
-docker build -t mal-account-service:local -f app/Dockerfile .
-kind load docker-image mal-account-service:local --name mal-platform
-export DATABASE_URL="postgresql://mal_account_app:${MAL_ACCOUNT_APP_PASSWORD}@172.17.0.1:5432/mal_accounts"
-make kind-secret
-make kind-deploy
-```
-
-Port-forward:
-
-```bash
-kubectl port-forward svc/mal-account-service 8080:8080
-```
-
-Try the service:
-
-```bash
-curl localhost:8080/healthz
-curl localhost:8080/readyz
-curl localhost:8080/metrics
-curl localhost:8080/api/accounts/acc_123
-```
-
-On Docker Desktop, set the local database host before creating the Kubernetes Secret:
-
-```bash
-export DATABASE_URL="postgresql://mal_account_app:${MAL_ACCOUNT_APP_PASSWORD}@host.docker.internal:5432/mal_accounts"
-make kind-secret
-```
-
-Do not commit local secret values. `.env` is ignored; `.env.example` lists the required variable names only.
-
-## Validation Commands
-
-```bash
-make test
-make docker-build
-make helm-lint
-make helm-template
-make terraform-validate
-```
-
-Terraform validation only formats and validates the AWS-shaped code:
-
-```bash
-cd infra/terraform
-terraform init -backend=false
-terraform fmt -check -recursive
-terraform validate
-```
-
-## Local To AWS Mapping
-
-| Local | AWS |
-|---|---|
-| Docker image loaded into kind | ECR |
-| kind Kubernetes | EKS |
-| Docker Compose Postgres | RDS Postgres |
-| LocalStack SQS | SQS + DLQ |
-| Helm chart | EKS workload |
-| Local Kubernetes Secret | Secrets Manager + External Secrets |
-| ServiceAccount | IRSA / EKS Pod Identity |
-| Prometheus/Grafana | AMP/Grafana/Datadog |
-
-## Architecture In Plain English
-
-This is the system relationship for non-technical reviewers:
-
-| Resource | What it does | How it helps the others |
+| Requirement | Evidence | Notes |
 |---|---|---|
-| Docker image | Packages the account service into a repeatable release artifact | CI builds it once, scans it, and tags it with the Git SHA so every deployment is traceable |
-| ECR | Stores production Docker images | EKS pulls the exact approved image from ECR when a release is deployed |
-| EKS | Runs the service pods | It keeps multiple copies available, replaces pods during rollouts, and routes traffic only to ready pods |
-| RDS Postgres | Stores accounts, audit events, and processed event IDs | The service reads account data from RDS; the consumer uses RDS to make message handling idempotent |
-| Secrets Manager | Stores database connection material outside the repo | External Secrets and IRSA let the pod receive only the secret it needs, without static AWS keys |
-| IRSA / EKS Pod Identity | Gives the pod a narrow AWS identity | The pod can read its database secret, consume its SQS queue, and connect as the intended database user without broad cloud access |
-| SQS | Holds background messages for asynchronous work | Account reads stay fast because audit side effects can be retried separately by consumers |
-| DLQ | Holds poison messages after repeated failures | Bad messages stop blocking normal processing and can be inspected safely |
-| Prometheus/Grafana/alerts | Shows request rate, errors, latency, and SLO burn | Engineers can see whether customers are failing to read account state and respond before trust is damaged |
-| Terraform | Describes the AWS production shape | Reviewers can see how the resources fit together even though the assessment is not applied to AWS |
+| Container | `app/Dockerfile` | Multi-stage Dockerfile, non-root user, pinned Python base image version and `HEALTHCHECK`. Runtime restrictions such as read-only root filesystem and dropped Linux capabilities are shown in the Kubernetes security context. |
+| Kubernetes workload | `k8s/helm/bank-account-service/` | Helm chart containing Deployment, Service, probes, PDB, HPA, NetworkPolicy, ServiceAccount and security contexts. |
+| Zero-downtime rollout | `docs/zero-downtime-rollout.md`, `k8s/helm/bank-account-service/templates/deployment.yaml` | Documents readiness, draining, `preStop`, `terminationGracePeriodSeconds` and rolling update behaviour. |
+| Postgres provisioning | `infra/terraform/modules/rds/`, `local/postgres/` | AWS production mapping uses RDS; local schema, seed data and grants are in SQL. |
+| Least-privilege database role | `local/postgres/002_runtime_role.sql`, `docs/database-access.md` | Runtime role has required grants only and no owner, superuser or DDL privileges. |
+| Credential handling | `k8s/helm/bank-account-service/templates/externalsecret.yaml`, `k8s/helm/bank-account-service/templates/secret.yaml`, `infra/terraform/modules/secrets/`, `infra/terraform/modules/irsa/`, `docs/database-access.md`, `docs/production-mapping.md` | Local secret path for kind and AWS mapping to Secrets Manager plus IRSA/EKS Pod Identity. |
+| Connection pooling decision | `submission/DECISIONS.md`, `docs/database-access.md` | PgBouncer is not added locally; transaction pooling is considered for production if RDS connection pressure appears. |
+| Backup and restore | `docs/backup-restore.md`, `submission/DECISIONS.md` | RPO/RTO and restore drill approach. |
+| Messaging primitive | `docs/messaging-semantics.md`, `submission/DECISIONS.md` | SQS-style queue implementation and trade-off versus log-based streams. |
+| Idempotent consumer | `app/src/bank_account_service/consumer.py`, `app/src/bank_account_service/idempotency.py`, `app/tests/test_consumer_idempotency.py` | `processed_events` dedupe makes duplicate delivery produce one side effect. |
+| Poison messages / DLQ | `docs/messaging-semantics.md`, `infra/terraform/modules/sqs/` | Retry transient failures; park malformed messages in DLQ. |
+| CI/CD | `.github/workflows/docker.yml`, `.github/workflows/kubernetes.yml`, `.github/workflows/terraform-plan.yml`, `.github/workflows/terraform-apply.yml` | Tests, image build, Trivy scan gate, immutable tag, OIDC, manual approval and deploy shape. |
+| Rollback path | `docs/rollback.md` | Docker image rollback by previous SHA; Kubernetes rollback by Helm revision; Terraform rollback by revert/plan/apply and PITR for stateful data. |
+| Terraform | `infra/terraform/`, `infra/terraform/plans/sanitized-plan.txt` | Modular AWS mapping. Authored and validated, not applied. |
+| Observability | `observability/README.md`, `observability/alerts/bank-account-service-alerts.yaml`, `observability/dashboards/bank-account-service-dashboard.json`, `observability/data-scrubbing.md`, `observability/traces/trace-path.md`, `local/prometheus/`, `local/grafana/` | RED metrics, trace path, dashboard/panel, alert rule and data scrubbing notes. |
+| Decisions document | `submission/DECISIONS.md` | Covers biggest decisions, SLO/alerting, least privilege/blast radius, recovery and what was cut. TODO: restore root `DECISIONS.md` if the submission must expose it at the repository root. |
 
-The important flow is: CI builds and scans an image, stores it in ECR, EKS runs that image, the pod reads credentials through Secrets Manager/IRSA, the service reads account data from RDS, background side effects go through SQS, repeated bad messages land in a DLQ, and observability tells the team whether account reads are reliable for customers.
+## Part 1: Build
 
-## CI/CD Split
+The build deliverables are implemented across the service, container, Helm chart, SQL, messaging consumer, CI/CD workflows, Terraform and observability files. The table above maps each assessment item to the relevant files.
 
-All pipelines live in `.github/workflows`:
+The most important implementation paths are:
 
-| Workflow | Purpose |
+- `app/Dockerfile`
+- `k8s/helm/bank-account-service/`
+- `local/postgres/`
+- `app/src/bank_account_service/consumer.py`
+- `app/src/bank_account_service/idempotency.py`
+- `infra/terraform/`
+- `.github/workflows/`
+- `observability/`
+
+## Part 2: Decisions and trade-offs
+
+The decisions document is:
+
+- `submission/DECISIONS.md`
+
+It covers:
+
+- biggest design decisions
+- SLO and burn-rate alerting
+- least privilege and blast radius
+- Postgres and messaging recovery
+- what was intentionally cut for time
+
+## Where to run or validate it
+
+The detailed local run and validation steps are documented in:
+
+- `docs/how-to-run.md`
+
+That guide covers the kind/Docker Compose path, Helm rendering, test commands and Terraform validation.
+
+The main validation intent is:
+
+- app tests
+- Docker build
+- Helm lint/template
+- Terraform fmt/validate
+- optional kind deployment
+
+## Local-to-AWS mapping
+
+| Local / assessment path | AWS production mapping |
 |---|---|
-| `docker.yml` | Python tests, image build, Trivy scan, immutable GHCR push on `main` |
-| `kubernetes.yml` | Helm lint/template and optional manual Helm deploy |
-| `terraform-plan.yml` | Terraform fmt/init/validate and optional OIDC-backed plan |
-| `terraform-apply.yml` | Manual production-gated Terraform apply skeleton |
+| kind Kubernetes cluster | EKS |
+| Local Docker image loaded into kind | ECR image tagged by Git SHA |
+| Helm chart | EKS workload deployed by Helm |
+| Local Postgres / Docker Compose Postgres | RDS Postgres |
+| Local Kubernetes Secret | AWS Secrets Manager + External Secrets |
+| Kubernetes ServiceAccount | IRSA or EKS Pod Identity |
+| LocalStack SQS or documented SQS-style queue | Amazon SQS + DLQ |
+| Prometheus/Grafana/Otel local config | AMP/Grafana/Datadog/CloudWatch depending on platform standard |
+| Terraform validation only | Production AWS resources after approval |
 
-## Banking Reliability Framing
+## Notes
 
-For an early-stage bank, platform choices should help the team ship quickly without hiding customer-impact risk. This repo therefore prioritises:
+This is an assessment implementation, not a live AWS deployment.
 
-- dependency-aware readiness so account reads are not routed to unhealthy pods
-- immutable image tags and scan gates so releases are traceable
-- least-privilege database access so an app compromise has a small blast radius
-- idempotent queue handling so retries do not duplicate customer-visible side effects
-- RED metrics and SLO alerts tied to account lookup success, because slow or failing reads become support contacts, failed onboarding checks, and loss of trust
+Intentionally not included or not fully applied:
+
+- real AWS deployment
+- production DNS/TLS
+- full External Secrets controller installation
+- production load testing
+- full migration framework
+- service mesh
+- ArgoCD/GitOps
+- Backstage
+- advanced policy-as-code
+
+The priority was to show the controls closest to reliable operation in a regulated environment: safe rollout, least privilege, idempotent messaging, recovery thinking, CI/CD gates and observability.

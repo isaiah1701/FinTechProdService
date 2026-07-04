@@ -16,7 +16,7 @@ Mechanism:
 4. If the insert conflicts, skip the side effect.
 5. Duplicate event delivery causes the side effect exactly once.
 
-This is implemented in `app/src/mal_account_service/consumer.py` and `app/src/mal_account_service/idempotency.py`.
+This is implemented in `app/src/bank_account_service/consumer.py` and `app/src/bank_account_service/idempotency.py`.
 
 ## Poison Messages
 

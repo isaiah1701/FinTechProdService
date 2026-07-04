@@ -7,7 +7,7 @@ module "ecr" {
 module "eks" {
   source = "./modules/eks"
 
-  name             = "mal-platform"
+  name             = "bank-platform"
   cluster_version  = var.eks_cluster_version
   subnet_ids       = var.private_subnet_ids
   cluster_role_arn = var.eks_cluster_role_arn
@@ -26,7 +26,7 @@ module "rds" {
 module "secrets" {
   source = "./modules/secrets"
 
-  name        = "mal/prod/account-service/database"
+  name        = "bank/prod/account-service/database"
   description = "Database connection details for ${var.name_prefix}. Value is inserted out-of-band."
 }
 
@@ -41,12 +41,12 @@ module "irsa" {
 
   name                 = var.name_prefix
   namespace            = "default"
-  service_account_name = "mal-account-service"
+  service_account_name = "bank-account-service"
   oidc_provider_arn    = var.eks_oidc_provider_arn
   oidc_provider_url    = var.eks_oidc_provider_url
   secret_arn           = module.secrets.secret_arn
   queue_arn            = module.sqs.queue_arn
-  rds_iam_connect_arn  = "arn:aws:rds-db:${var.aws_region}:${var.aws_account_id}:dbuser:${module.rds.resource_id}/mal_account_app"
+  rds_iam_connect_arn  = "arn:aws:rds-db:${var.aws_region}:${var.aws_account_id}:dbuser:${module.rds.resource_id}/bank_account_app"
 }
 
 module "observability" {

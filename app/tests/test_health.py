@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from mal_account_service.main import app
+from bank_account_service.main import app
 
 
 def test_healthz_returns_ok():

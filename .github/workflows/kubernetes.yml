@@ -24,6 +24,7 @@ on:
 permissions:
   contents: read
   id-token: write
+  packages: read
 
 jobs:
   helm-validate:
@@ -35,18 +36,19 @@ jobs:
       - uses: azure/setup-helm@1a275c3b69536ee54be43f2070a358922e12c8d4
 
       - name: Helm lint
-        run: helm lint k8s/helm/mal-account-service
+        run: helm lint k8s/helm/bank-account-service
 
       - name: Helm template local values
-        run: helm template mal-account-service k8s/helm/mal-account-service
+        run: helm template bank-account-service k8s/helm/bank-account-service
 
       - name: Helm template production values
-        run: helm template mal-account-service k8s/helm/mal-account-service -f k8s/helm/mal-account-service/values-prod.yaml
+        run: helm template bank-account-service k8s/helm/bank-account-service -f k8s/helm/bank-account-service/values-prod.yaml
 
   helm-deploy:
     needs: helm-validate
     if: github.event_name == 'workflow_dispatch' && inputs.deploy == 'true'
     runs-on: ubuntu-latest
+    # GitHub Environments provide the manual approval gate for production-equivalent deploys.
     environment: production
 
     steps:
@@ -61,11 +63,25 @@ jobs:
           aws-region: eu-west-2
 
       - name: Update kubeconfig
-        run: aws eks update-kubeconfig --name mal-platform --region eu-west-2
+        run: aws eks update-kubeconfig --name bank-platform --region eu-west-2
 
       - name: Deploy with Helm
         run: |
           test -n "${{ inputs.image_tag }}"
-          helm upgrade --install mal-account-service k8s/helm/mal-account-service \
-            -f k8s/helm/mal-account-service/values-prod.yaml \
-            --set image.tag="${{ inputs.image_tag }}"
+          test -n "${{ vars.ECR_REGISTRY }}"
+          ECR_REPOSITORY="${{ vars.ECR_REPOSITORY }}"
+          ECR_REPOSITORY="${ECR_REPOSITORY:-bank-account-service}"
+          IMAGE_REPOSITORY="${{ vars.ECR_REGISTRY }}/${ECR_REPOSITORY}"
+          # --atomic rolls back automatically if the release fails to become healthy.
+          # Readiness probes are the rollout gate; liveness is only for restarting dead containers.
+          helm upgrade --install bank-account-service k8s/helm/bank-account-service \
+            --namespace bank \
+            --create-namespace \
+            -f k8s/helm/bank-account-service/values-prod.yaml \
+            --set image.repository="$IMAGE_REPOSITORY" \
+            --set image.tag="${{ inputs.image_tag }}" \
+            --atomic \
+            --timeout 5m
+
+      - name: Wait for rollout
+        run: kubectl rollout status deployment/bank-account-service -n bank --timeout=120s

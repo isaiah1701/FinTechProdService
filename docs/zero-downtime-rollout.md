@@ -20,7 +20,7 @@ Sequence:
 7. Existing in-flight requests continue.
 8. The pod exits cleanly before `terminationGracePeriodSeconds`.
 
-The important Kubernetes settings are in `k8s/helm/mal-account-service/templates/deployment.yaml`:
+The important Kubernetes settings are in `k8s/helm/bank-account-service/templates/deployment.yaml`:
 
 ```yaml
 strategy:

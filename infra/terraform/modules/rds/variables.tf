@@ -33,13 +33,13 @@ variable "instance_class" {
 variable "database_name" {
   type        = string
   description = "Application database name."
-  default     = "mal_accounts"
+  default     = "bank_accounts"
 }
 
 variable "master_username" {
   type        = string
   description = "Owner username. Runtime app uses a separate least-privilege role."
-  default     = "mal_owner"
+  default     = "bank_owner"
 }
 
 variable "allocated_storage" {

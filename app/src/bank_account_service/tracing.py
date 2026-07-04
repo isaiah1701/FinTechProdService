@@ -6,7 +6,7 @@ from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import ConsoleSpanExporter, SimpleSpanProcessor
 
-from mal_account_service.config import get_settings
+from bank_account_service.config import get_settings
 
 
 def configure_tracing(app: object) -> None:
@@ -21,4 +21,4 @@ def configure_tracing(app: object) -> None:
 
 
 def get_tracer() -> trace.Tracer:
-    return trace.get_tracer("mal_account_service")
+    return trace.get_tracer("bank_account_service")

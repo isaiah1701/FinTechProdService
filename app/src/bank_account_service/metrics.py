@@ -7,19 +7,19 @@ from starlette.responses import Response as StarletteResponse
 
 
 REQUESTS = Counter(
-    "mal_account_service_http_requests_total",
+    "bank_account_service_http_requests_total",
     "HTTP requests served by the account service. Business context: account lookup demand and release impact.",
     ["method", "path", "status"],
 )
 
 ERRORS = Counter(
-    "mal_account_service_http_request_errors_total",
+    "bank_account_service_http_request_errors_total",
     "HTTP requests returning 5xx responses. Business context: customer-impacting account lookup failures.",
     ["method", "path", "status"],
 )
 
 DURATION = Histogram(
-    "mal_account_service_http_request_duration_seconds",
+    "bank_account_service_http_request_duration_seconds",
     "HTTP request duration in seconds. Business context: tail latency for banking account reads.",
     ["method", "path"],
     buckets=(0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2, 5),
